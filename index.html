@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimus Instruments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#1e3c8c',
+                            darkest: '#021854',
+                            accent: '#ccdaff',
+                            green: '#009971',
+                            'green-light': '#00d9a0',
+                        },
+                        surface: {
+                            light: '#f8f9fc',
+                            sunken: '#e8ebf3',
+                            subtle: '#d2d8e8',
+                        },
+                        content: {
+                            primary: '#1e3c8c',
+                            secondary: '#1e3c8c',
+                            tertiary: '#4b63a3',
+                        },
+                        border: {
+                            DEFAULT: '#d2d8e8',
+                            weak: '#e8ebf3',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+</head>
+
+<body class="bg-white font-sans" x-data="header()">
+
+    <!-- Announcement Bar -->
+    <div x-show="showAnnouncement" x-cloak class="bg-brand-green-light relative">
+        <div class="max-w-[1440px] mx-auto flex items-center justify-center py-2.5 px-[72px]">
+            <a href="#" class="flex items-center gap-1.5 text-brand-darkest text-sm font-medium tracking-wide">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 16 16">
+                    <path d="M8 1l2.1 4.2L15 6l-3.5 3.4.8 4.8L8 12l-4.3 2.2.8-4.8L1 6l4.9-.8L8 1z" stroke="currentColor"
+                        stroke-width="1.5" stroke-linejoin="round" />
+                </svg>
+                Announcement message
+                <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                    <path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </a>
+            <button @click="showAnnouncement = false"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-brand-darkest p-1">
+                <svg class="w-5 h-5" viewBox="0 0 20 20" fill="none">
+                    <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="bg-brand-dark">
+        <div class="max-w-[1440px] mx-auto flex items-center justify-between py-3 px-[72px]">
+            <!-- Logo -->
+            <a href="#" @click.prevent="currentView = 'default'; searchQuery = ''; showAutocomplete = false" class="flex items-center gap-2.5 text-white shrink-0">
+                <svg class="w-8 h-8" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="14" stroke="white" stroke-width="2" />
+                    <circle cx="16" cy="16" r="6" fill="white" />
+                </svg>
+                <span class="text-xl font-bold tracking-wide">Optimus Instruments</span>
+            </a>
+
+            <!-- Search -->
+            <div class="flex-1 max-w-[600px] mx-8 relative" @click.away="showAutocomplete = false">
+                <div class="relative">
+                    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" viewBox="0 0 20 20" fill="none">
+                        <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                    <input type="text"
+                        x-model="searchQuery"
+                        @input="onSearchInput()"
+                        @focus="onSearchFocus()"
+                        @keydown="handleSearchKeydown($event)"
+                        placeholder="Zoek op productnaam, testnorm of testeigenschap..."
+                        class="w-full bg-white rounded-lg py-2.5 pl-10 pr-16 text-sm text-gray-700 placeholder-[#94A3B8] border-2 border-transparent focus:border-brand-green-light focus:shadow-[0_0_0_3px_rgba(0,217,160,0.15)] focus:outline-none transition-all duration-150" />
+                    <!-- Clear button -->
+                    <button x-show="searchQuery.length > 0" x-cloak
+                        @click="clearSearch()"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 transition-colors">
+                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Autocomplete Dropdown -->
+                <div x-show="showAutocomplete" x-cloak
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E2E8F0] rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.08)] z-[60] overflow-hidden">
+
+                    <!-- No results -->
+                    <template x-if="autocompleteResults.suggestions.length === 0 && autocompleteResults.products.length === 0 && autocompleteResults.content.length === 0">
+                        <div class="px-5 py-6 text-center">
+                            <p class="text-sm font-medium text-gray-700">Geen resultaten voor "<span x-text="searchQuery"></span>"</p>
+                            <p class="text-xs text-[#64748B] mt-1">Probeer een andere zoekterm of neem contact op met onze specialisten.</p>
+                        </div>
+                    </template>
+
+                    <!-- Zone 1: Suggesties -->
+                    <div x-show="autocompleteResults.suggestions.length > 0" class="py-2">
+                        <div class="px-4 py-1.5">
+                            <span class="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Suggesties</span>
+                        </div>
+                        <template x-for="(sug, sIdx) in autocompleteResults.suggestions.slice(0, 4)" :key="sIdx">
+                            <button @click="selectSuggestion(sug)"
+                                @mouseenter="acHighlightIndex = sIdx"
+                                class="w-full flex items-center gap-2.5 px-4 py-2 text-left text-sm transition-colors duration-100"
+                                :class="acHighlightIndex === sIdx ? 'bg-[#F0F4FF]' : 'hover:bg-[#F0F4FF]'">
+                                <svg class="w-4 h-4 text-[#94A3B8] shrink-0" viewBox="0 0 20 20" fill="none">
+                                    <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5" />
+                                    <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                </svg>
+                                <span class="text-gray-700" x-html="formatSuggestion(sug)"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Divider -->
+                    <div x-show="autocompleteResults.suggestions.length > 0 && autocompleteResults.products.length > 0" class="border-t border-[#E2E8F0]"></div>
+
+                    <!-- Zone 2: Producten -->
+                    <div x-show="autocompleteResults.products.length > 0" class="py-2">
+                        <div class="px-4 py-1.5">
+                            <span class="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Producten</span>
+                        </div>
+                        <template x-for="(prod, pIdx) in autocompleteResults.products.slice(0, 4)" :key="prod.id">
+                            <button @click="selectAutocompleteProduct(prod)"
+                                @mouseenter="acHighlightIndex = acProductBaseIndex + pIdx"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100"
+                                :class="acHighlightIndex === (acProductBaseIndex + pIdx) ? 'bg-[#F0F4FF]' : 'hover:bg-[#F0F4FF]'">
+                                <!-- Thumbnail placeholder -->
+                                <div class="w-12 h-12 bg-surface-sunken rounded flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-content-tertiary/50" viewBox="0 0 20 20" fill="none">
+                                        <rect x="2" y="2" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                                        <circle cx="7" cy="7" r="1.5" fill="currentColor"/>
+                                        <path d="M2 14l4-4 3 3 4-5 5 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-brand-dark truncate" x-html="highlightMatch(prod.name, searchQuery)"></p>
+                                    <p class="text-[13px] text-[#64748B] truncate">
+                                        <span x-text="prod.brand.toUpperCase()"></span>
+                                        <span class="mx-1">&middot;</span>
+                                        <span x-text="prod.standard"></span>
+                                        <span class="mx-1">&middot;</span>
+                                        <span x-text="prod.automation"></span>
+                                    </p>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Divider before content -->
+                    <div x-show="autocompleteResults.content.length > 0 && (autocompleteResults.products.length > 0 || autocompleteResults.suggestions.length > 0)" class="border-t border-[#E2E8F0]"></div>
+
+                    <!-- Zone 3: Content -->
+                    <div x-show="autocompleteResults.content.length > 0" class="py-2">
+                        <div class="px-4 py-1.5">
+                            <span class="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Content</span>
+                        </div>
+                        <template x-for="(item, cIdx) in autocompleteResults.content.slice(0, 2)" :key="cIdx">
+                            <button @click="selectedPage = item.title; currentView = 'default'; showAutocomplete = false; acHighlightIndex = -1"
+                                @mouseenter="acHighlightIndex = acContentBaseIndex + cIdx"
+                                class="w-full flex items-center gap-2.5 px-4 py-2 text-left text-sm transition-colors duration-100"
+                                :class="acHighlightIndex === (acContentBaseIndex + cIdx) ? 'bg-[#F0F4FF]' : 'hover:bg-[#F0F4FF]'">
+                                <span class="text-[11px] uppercase font-semibold bg-[#F0F4FF] text-[#64748B] rounded px-2 py-0.5 shrink-0" x-text="item.tag"></span>
+                                <span class="text-brand-darkest truncate" x-html="highlightMatch(item.title, searchQuery)"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Zone 4: Alle resultaten link -->
+                    <template x-if="autocompleteResults.suggestions.length > 0 || autocompleteResults.products.length > 0 || autocompleteResults.content.length > 0">
+                        <div class="border-t border-[#E2E8F0]">
+                            <button @click="submitSearch()"
+                                @mouseenter="acHighlightIndex = acAllResultsIndex"
+                                class="w-full px-4 py-3 text-left text-sm font-medium transition-colors duration-100"
+                                :class="acHighlightIndex === acAllResultsIndex ? 'bg-[#F0F4FF] text-brand-dark' : 'text-brand-dark hover:bg-[#F0F4FF]'">
+                                Alle resultaten voor "<span x-text="searchQuery"></span>"
+                                <svg class="w-4 h-4 inline ml-0.5" viewBox="0 0 20 20" fill="none">
+                                    <path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Right Icons -->
+            <div class="flex items-center gap-4 text-white">
+                <button class="flex items-center gap-1 text-sm font-medium">
+                    NL
+                    <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                        <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+                <button class="p-1">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M4 20c0-3.3 2.7-6 6-6h4c3.3 0 6 2.7 6 6" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                </button>
+                <button class="p-1">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M3 9h18M9 9v12" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                </button>
+                <button class="p-1 relative">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="currentColor"
+                            stroke-width="1.5" />
+                        <path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Bar + Mega Menu wrapper for mouseleave -->
+    <nav class="bg-surface-light border-b border-border relative z-50" @mouseleave="startCloseTimer()"
+        @mouseenter="cancelCloseTimer()">
+        <div class="max-w-[1440px] mx-auto flex items-center justify-between px-[72px]">
+            <!-- Left Nav -->
+            <div class="flex items-center gap-0">
+                <template x-for="(item, index) in mainNavLeft" :key="index">
+                    <button @click="toggleMenu(index)" @mouseenter="handleNavHover(index)"
+                        class="flex items-center gap-1 px-4 py-3.5 text-[15px] font-medium transition-colors relative"
+                        :class="openMenu === index ? 'text-brand-dark border-b-2 border-brand-green-light' : 'text-content-primary hover:text-brand-dark'">
+                        <span x-text="item.label"></span>
+                        <svg class="w-4 h-4 transition-transform" :class="openMenu === index && 'rotate-180'"
+                            viewBox="0 0 16 16" fill="none">
+                            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </template>
+            </div>
+
+            <!-- Right Nav -->
+            <div class="flex items-center gap-6">
+                <template x-for="(item, rIdx) in mainNavRight" :key="item.label">
+                    <a href="#" class="text-[15px] font-medium py-3.5 transition-colors relative"
+                        :class="activeRightNav === rIdx ? 'text-brand-dark border-b-2 border-brand-green-light' : 'text-content-primary hover:text-brand-dark'"
+                        x-text="item.label"
+                        @click.prevent="activeRightNav = rIdx; openMenu = null; selectedPage = item.label; currentView = 'default'"></a>
+                </template>
+            </div>
+        </div>
+
+        <!-- Mega Menu Panel -->
+        <div x-show="openMenu !== null" x-cloak
+            class="absolute left-0 right-0 bg-surface-light border-b border-border shadow-[0px_6px_24px_2px_rgba(169,169,169,0.25)] z-50"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
+            <div class="max-w-[1440px] mx-auto flex px-[72px]" style="height: 520px;">
+
+                <!-- Column 1: Zoek op -->
+                <div class="w-[270px] shrink-0 border-r border-border-weak flex flex-col">
+                    <a href="#" @click.prevent="selectPage(currentNavLabel)"
+                        class="flex items-center gap-1 px-6 py-3 border-b border-border-weak text-content-tertiary text-[14px] tracking-[0.18px] hover:text-brand-green hover:underline shrink-0">
+                        <span x-text="currentNavLabel"></span>
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                    <div class="flex-1 overflow-y-auto pr-3 py-3">
+                        <div class="px-2 py-2 mb-1">
+                            <span class="text-xs font-medium text-content-tertiary uppercase tracking-wider">Zoek op</span>
+                        </div>
+                        <template x-for="(cat, catIdx) in categories" :key="catIdx">
+                            <button @click="selectCategory(catIdx)"
+                                @mouseenter="hoverMode && cat.hasChildren && selectCategory(catIdx)"
+                                class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-left min-h-[48px] transition-colors"
+                                :class="activeCategory === catIdx ? (hoverMode ? 'bg-surface-sunken text-content-secondary' : 'bg-brand-accent text-brand-darkest') : 'text-content-secondary hover:bg-surface-sunken/50'">
+                                <span class="text-[18px] leading-[1.5] tracking-[0.18px]" x-text="cat.label"></span>
+                                <svg x-show="cat.hasChildren" class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none">
+                                    <path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </template>
+                    </div>
+                    <div class="shrink-0 border-t border-border-weak px-4 py-3 flex items-center justify-between">
+                        <span class="text-xs font-medium text-content-tertiary">Hover modus</span>
+                        <button @click.stop="hoverMode = !hoverMode"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                            :class="hoverMode ? 'bg-brand-green' : 'bg-surface-subtle'">
+                            <span class="inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm"
+                                :class="hoverMode ? 'translate-x-6' : 'translate-x-1'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Column 2: Subcategories -->
+                <div x-show="activeCategoryHasChildren"
+                    class="w-[300px] shrink-0 border-r border-border-weak flex flex-col">
+                    <a href="#" @click.prevent="selectPage('Alle ' + (categories[activeCategory]?.label || ''))"
+                        class="flex items-center gap-1 px-6 py-3 border-b border-border-weak text-content-tertiary text-[14px] tracking-[0.18px] hover:text-brand-green hover:underline shrink-0">
+                        <span>Alle <span x-text="categories[activeCategory]?.label || ''"></span></span>
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                    <div class="flex-1 overflow-y-auto p-3">
+                        <div class="px-2 py-2 mb-1">
+                            <span class="text-xs font-medium text-content-tertiary uppercase tracking-wider"
+                                x-text="categories[activeCategory]?.label || ''"></span>
+                        </div>
+                        <template x-for="(sub, subIdx) in subcategories" :key="subIdx">
+                            <button @click="selectSubcategory(subIdx)"
+                                @mouseenter="hoverMode && selectSubcategory(subIdx)"
+                                class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-left min-h-[48px] transition-colors"
+                                :class="activeSubcategory === subIdx ? (hoverMode ? 'bg-surface-sunken text-content-secondary' : 'bg-brand-accent text-brand-darkest') : 'text-content-secondary hover:bg-surface-sunken/50'">
+                                <span class="text-[18px] leading-[1.5] tracking-[0.18px]" x-text="sub.label"></span>
+                                <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none">
+                                    <path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Column 3: Filters -->
+                <div x-show="activeCategoryHasChildren" class="flex-1 flex flex-col">
+                    <a href="#" @click.prevent="selectPage('Alle ' + activeSubcategoryLabel + ' producten')"
+                        class="flex items-center gap-1 px-6 py-3 border-b border-border-weak text-content-tertiary text-[14px] tracking-[0.18px] hover:text-brand-green hover:underline shrink-0">
+                        <span>Alle <span x-text="activeSubcategoryLabel"></span> producten</span>
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                    <div class="flex-1 overflow-y-auto px-3 pt-1">
+                        <div class="px-2 py-2 mb-1">
+                            <span class="text-xs font-medium text-content-tertiary uppercase tracking-wider">Filters</span>
+                        </div>
+                        <template x-for="(filter, fIdx) in megaFilters" :key="fIdx">
+                            <a href="#" @click.prevent="selectPage(filter.label)"
+                                class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg min-h-[48px] transition-colors cursor-pointer text-content-secondary hover:bg-surface-sunken/50">
+                                <span class="text-[18px] leading-[1.5] tracking-[0.18px]" x-text="filter.label"></span>
+                                <span class="bg-surface-subtle text-content-tertiary text-xs font-medium rounded-full px-3 py-0.5 min-w-[28px] text-center"
+                                    x-text="filter.count"></span>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <main class="min-h-[60vh]">
+
+        <!-- Default View -->
+        <div x-show="currentView === 'default'" class="flex items-center justify-center min-h-[60vh]">
+            <h1 class="text-5xl font-bold text-brand-dark" x-text="selectedPage"></h1>
+        </div>
+
+        <!-- Search Results View -->
+        <div x-show="currentView === 'searchResults'" x-cloak>
+            <div class="max-w-[1440px] mx-auto px-[72px] py-8">
+
+                <!-- Results Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-brand-dark">
+                        <span x-text="filteredResults.length"></span> resultaten voor "<span x-text="searchResultsQuery" class="font-bold"></span>"
+                    </h2>
+                    <div class="flex items-center gap-4">
+                        <!-- Sort -->
+                        <select x-model="resultsSortBy" @change="applyFilters()"
+                            class="text-sm border border-border rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:border-brand-dark bg-white">
+                            <option value="relevance">Relevantie</option>
+                            <option value="name-asc">Naam A-Z</option>
+                            <option value="name-desc">Naam Z-A</option>
+                        </select>
+                        <!-- View toggle -->
+                        <div class="flex border border-border rounded-lg overflow-hidden">
+                            <button @click="resultsViewMode = 'list'"
+                                class="p-2 transition-colors"
+                                :class="resultsViewMode === 'list' ? 'bg-brand-dark text-white' : 'bg-white text-gray-500 hover:bg-surface-light'">
+                                <svg class="w-5 h-5" viewBox="0 0 20 20" fill="none">
+                                    <path d="M3 4h14M3 8h14M3 12h14M3 16h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                            <button @click="resultsViewMode = 'grid'"
+                                class="p-2 transition-colors border-l border-border"
+                                :class="resultsViewMode === 'grid' ? 'bg-brand-dark text-white' : 'bg-white text-gray-500 hover:bg-surface-light'">
+                                <svg class="w-5 h-5" viewBox="0 0 20 20" fill="none">
+                                    <rect x="2" y="2" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                    <rect x="11" y="2" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                    <rect x="2" y="11" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                    <rect x="11" y="11" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Filter Chips -->
+                <div x-show="hasActiveFilters" class="flex flex-wrap items-center gap-2 mb-5">
+                    <template x-for="chip in allActiveFilterChips" :key="chip.type + chip.value">
+                        <span class="inline-flex items-center gap-1.5 bg-brand-accent text-brand-darkest text-sm px-3 py-1 rounded-full">
+                            <span x-text="chip.value"></span>
+                            <button @click="removeFilter(chip.type, chip.value)" class="hover:text-red-600 transition-colors">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none">
+                                    <path d="M10 4L4 10M4 4l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </span>
+                    </template>
+                    <button @click="clearAllFilters()" class="text-sm text-content-tertiary hover:text-brand-dark underline ml-1">
+                        Wis alle filters
+                    </button>
+                </div>
+
+                <!-- Two Column Layout -->
+                <div class="flex gap-8">
+
+                    <!-- Sidebar Filters -->
+                    <aside class="w-[260px] shrink-0 space-y-1">
+
+                        <!-- Category filter -->
+                        <div class="border-b border-border-weak pb-3 mb-3">
+                            <button @click="toggleFilterSection('categories')" class="w-full flex items-center justify-between py-2 text-sm font-semibold text-brand-dark">
+                                Categorie
+                                <svg class="w-4 h-4 transition-transform" :class="expandedFilterSections.includes('categories') && 'rotate-180'" viewBox="0 0 16 16" fill="none">
+                                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div x-show="expandedFilterSections.includes('categories')" class="mt-1 space-y-1">
+                                <template x-for="cat in availableCategories" :key="cat">
+                                    <label class="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+                                        <input type="checkbox" :checked="activeFilters.categories.includes(cat)" @change="toggleFilter('categories', cat)"
+                                            class="w-4 h-4 rounded border-gray-300 text-brand-dark focus:ring-brand-dark" />
+                                        <span class="text-sm text-gray-700 group-hover:text-brand-dark" x-text="cat"></span>
+                                        <span class="text-xs text-[#94A3B8] ml-auto" x-text="'(' + countByCategory(cat) + ')'"></span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Brand filter -->
+                        <div class="border-b border-border-weak pb-3 mb-3">
+                            <button @click="toggleFilterSection('brands')" class="w-full flex items-center justify-between py-2 text-sm font-semibold text-brand-dark">
+                                Merk
+                                <svg class="w-4 h-4 transition-transform" :class="expandedFilterSections.includes('brands') && 'rotate-180'" viewBox="0 0 16 16" fill="none">
+                                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div x-show="expandedFilterSections.includes('brands')" class="mt-1 space-y-1">
+                                <template x-for="brand in availableBrands" :key="brand">
+                                    <label class="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+                                        <input type="checkbox" :checked="activeFilters.brands.includes(brand)" @change="toggleFilter('brands', brand)"
+                                            class="w-4 h-4 rounded border-gray-300 text-brand-dark focus:ring-brand-dark" />
+                                        <span class="text-sm text-gray-700 group-hover:text-brand-dark" x-text="brand"></span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Automation filter -->
+                        <div class="border-b border-border-weak pb-3 mb-3">
+                            <button @click="toggleFilterSection('automation')" class="w-full flex items-center justify-between py-2 text-sm font-semibold text-brand-dark">
+                                Automatisering
+                                <svg class="w-4 h-4 transition-transform" :class="expandedFilterSections.includes('automation') && 'rotate-180'" viewBox="0 0 16 16" fill="none">
+                                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div x-show="expandedFilterSections.includes('automation')" class="mt-1 space-y-1">
+                                <template x-for="auto in availableAutomation" :key="auto">
+                                    <label class="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+                                        <input type="checkbox" :checked="activeFilters.automation.includes(auto)" @change="toggleFilter('automation', auto)"
+                                            class="w-4 h-4 rounded border-gray-300 text-brand-dark focus:ring-brand-dark" />
+                                        <span class="text-sm text-gray-700 group-hover:text-brand-dark" x-text="auto"></span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Standard filter -->
+                        <div class="pb-3">
+                            <button @click="toggleFilterSection('standards')" class="w-full flex items-center justify-between py-2 text-sm font-semibold text-brand-dark">
+                                Testnorm
+                                <svg class="w-4 h-4 transition-transform" :class="expandedFilterSections.includes('standards') && 'rotate-180'" viewBox="0 0 16 16" fill="none">
+                                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div x-show="expandedFilterSections.includes('standards')" class="mt-1 space-y-1">
+                                <template x-for="std in availableStandards" :key="std">
+                                    <label class="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+                                        <input type="checkbox" :checked="activeFilters.standards.includes(std)" @change="toggleFilter('standards', std)"
+                                            class="w-4 h-4 rounded border-gray-300 text-brand-dark focus:ring-brand-dark" />
+                                        <span class="text-sm text-gray-700 group-hover:text-brand-dark" x-text="std"></span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Results Area -->
+                    <div class="flex-1 min-w-0">
+
+                        <!-- List View -->
+                        <div x-show="resultsViewMode === 'list' && filteredResults.length > 0" class="space-y-0 divide-y divide-border">
+                            <template x-for="product in filteredResults" :key="product.id">
+                                <a href="#" @click.prevent="selectPage(product.name)" class="flex gap-5 py-5 group transition-colors hover:bg-surface-light/50 -mx-3 px-3 rounded-lg">
+                                    <!-- Thumbnail -->
+                                    <div class="w-[120px] h-[120px] bg-surface-sunken rounded-lg shrink-0 flex items-center justify-center">
+                                        <svg class="w-10 h-10 text-content-tertiary/30" viewBox="0 0 40 40" fill="none">
+                                            <rect x="4" y="4" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/>
+                                            <circle cx="14" cy="14" r="3" fill="currentColor"/>
+                                            <path d="M4 28l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <!-- Info -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <p class="text-xs font-semibold text-content-tertiary uppercase tracking-wider" x-text="product.series"></p>
+                                                <h3 class="text-lg font-semibold text-brand-dark mt-0.5 group-hover:text-brand-darkest" x-html="highlightMatch(product.name, searchResultsQuery)"></h3>
+                                            </div>
+                                            <span x-show="product.isNew" class="bg-brand-green text-white text-xs font-semibold px-2.5 py-0.5 rounded-full shrink-0 mt-1">Nieuw</span>
+                                        </div>
+                                        <p class="text-sm text-[#64748B] mt-1.5">
+                                            <span>Testnorm: <span x-text="product.standard" class="text-gray-700"></span></span>
+                                            <span class="mx-1.5">&middot;</span>
+                                            <span>Bereik: <span x-text="product.range" class="text-gray-700"></span></span>
+                                            <span class="mx-1.5">&middot;</span>
+                                            <span>Automatisering: <span x-text="product.automation" class="text-gray-700"></span></span>
+                                        </p>
+                                        <p class="text-sm text-gray-600 mt-2 line-clamp-2" x-text="product.description"></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+
+                        <!-- Grid View -->
+                        <div x-show="resultsViewMode === 'grid' && filteredResults.length > 0" class="grid grid-cols-3 gap-5">
+                            <template x-for="product in filteredResults" :key="product.id">
+                                <a href="#" @click.prevent="selectPage(product.name)" class="group border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
+                                    <div class="w-full aspect-square bg-surface-sunken flex items-center justify-center relative">
+                                        <svg class="w-12 h-12 text-content-tertiary/30" viewBox="0 0 40 40" fill="none">
+                                            <rect x="4" y="4" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/>
+                                            <circle cx="14" cy="14" r="3" fill="currentColor"/>
+                                            <path d="M4 28l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <span x-show="product.isNew" class="absolute top-3 right-3 bg-brand-green text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">Nieuw</span>
+                                    </div>
+                                    <div class="p-4">
+                                        <p class="text-xs font-semibold text-content-tertiary uppercase tracking-wider" x-text="product.series"></p>
+                                        <h3 class="text-base font-semibold text-brand-dark mt-0.5 group-hover:text-brand-darkest line-clamp-2" x-html="highlightMatch(product.name, searchResultsQuery)"></h3>
+                                        <p class="text-[13px] text-[#64748B] mt-1.5">
+                                            <span x-text="product.brand"></span>
+                                            <span class="mx-1">&middot;</span>
+                                            <span x-text="product.standard"></span>
+                                        </p>
+                                        <p class="text-[13px] text-[#64748B] mt-0.5" x-text="product.automation"></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+
+                        <!-- No Results -->
+                        <div x-show="filteredResults.length === 0" class="text-center py-16">
+                            <svg class="w-16 h-16 mx-auto text-surface-subtle mb-4" viewBox="0 0 64 64" fill="none">
+                                <circle cx="28" cy="28" r="18" stroke="currentColor" stroke-width="2.5"/>
+                                <path d="M42 42l14 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                                <path d="M20 28h16M28 20v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold text-brand-dark mb-2">Geen resultaten voor "<span x-text="searchResultsQuery"></span>"</h3>
+                            <ul class="text-sm text-[#64748B] space-y-1 mb-8">
+                                <li>Controleer de spelling</li>
+                                <li>Probeer een andere zoekterm</li>
+                                <li>Gebruik minder specifieke termen</li>
+                            </ul>
+                            <div class="bg-surface-light rounded-xl p-8 max-w-md mx-auto">
+                                <p class="text-base font-medium text-brand-dark mb-1">Hulp nodig?</p>
+                                <p class="text-sm text-[#64748B] mb-4">Onze technische specialisten helpen je graag.</p>
+                                <button class="bg-brand-green hover:bg-brand-green/90 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">
+                                    Contacteer ons
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Non-Product Content Results (grouped by type) -->
+                <div x-show="contentResults.nieuws.length > 0 || contentResults.support.length > 0 || contentResults.jobs.length > 0" class="mt-8 pt-8 border-t border-[#E2E8F0] space-y-6">
+
+                    <!-- NIEUWS & ARTIKELS -->
+                    <div x-show="contentResults.nieuws.length > 0">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Nieuws & Artikels</span>
+                            <a href="/nieuws" class="text-[13px] font-medium text-brand-dark hover:text-brand-darkest">
+                                Bekijk alle
+                                <svg class="w-3.5 h-3.5 inline ml-0.5" viewBox="0 0 20 20" fill="none"><path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
+                        </div>
+                        <div class="border-t border-[#E2E8F0] pt-3 space-y-3">
+                            <template x-for="item in contentResults.nieuws" :key="item.title">
+                                <a href="#" @click.prevent="selectPage(item.title)" class="flex items-start gap-3 group py-1">
+                                    <span class="text-[11px] uppercase font-semibold bg-[#F0F4FF] text-[#64748B] rounded px-2 py-0.5 shrink-0 mt-0.5" x-text="item.category"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-[15px] font-semibold text-brand-dark group-hover:text-brand-darkest truncate" x-html="highlightMatch(item.title, searchResultsQuery)"></p>
+                                        <p class="text-[13px] text-[#64748B] mt-0.5" x-text="item.date"></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- SUPPORT -->
+                    <div x-show="contentResults.support.length > 0">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Support</span>
+                            <a href="/support" class="text-[13px] font-medium text-brand-dark hover:text-brand-darkest">
+                                Bekijk alle
+                                <svg class="w-3.5 h-3.5 inline ml-0.5" viewBox="0 0 20 20" fill="none"><path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
+                        </div>
+                        <div class="border-t border-[#E2E8F0] pt-3 space-y-3">
+                            <template x-for="item in contentResults.support" :key="item.title">
+                                <a href="#" @click.prevent="selectPage(item.title)" class="flex items-start gap-3 group py-1">
+                                    <span class="text-[11px] uppercase font-semibold bg-[#F0F4FF] text-[#64748B] rounded px-2 py-0.5 shrink-0 mt-0.5" x-text="item.format"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-[15px] font-semibold text-brand-dark group-hover:text-brand-darkest truncate" x-html="highlightMatch(item.title, searchResultsQuery)"></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- JOBS -->
+                    <div x-show="contentResults.jobs.length > 0">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Jobs</span>
+                            <a href="/jobs" class="text-[13px] font-medium text-brand-dark hover:text-brand-darkest">
+                                Bekijk alle
+                                <svg class="w-3.5 h-3.5 inline ml-0.5" viewBox="0 0 20 20" fill="none"><path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
+                        </div>
+                        <div class="border-t border-[#E2E8F0] pt-3 space-y-3">
+                            <template x-for="item in contentResults.jobs" :key="item.title">
+                                <a href="#" @click.prevent="selectPage(item.title)" class="flex items-start gap-3 group py-1">
+                                    <span class="text-[11px] uppercase font-semibold bg-[#F0F4FF] text-[#64748B] rounded px-2 py-0.5 shrink-0 mt-0.5" x-text="item.category"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-[15px] font-semibold text-brand-dark group-hover:text-brand-darkest truncate" x-html="highlightMatch(item.title, searchResultsQuery)"></p>
+                                        <p class="text-[13px] text-[#64748B] mt-0.5"><span x-text="item.location"></span> &middot; <span x-text="item.contract"></span></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function header() {
+            return {
+                // === Existing state ===
+                showAnnouncement: true,
+                openMenu: null,
+                activeCategory: 0,
+                activeSubcategory: 0,
+                activeFilter: null,
+                hoverMode: true,
+                closeTimer: null,
+                selectedPage: 'Meetapparatuur',
+                activeRightNav: null,
+
+                // === Search state ===
+                searchQuery: '',
+                showAutocomplete: false,
+                autocompleteResults: { suggestions: [], products: [], content: [] },
+                acHighlightIndex: -1,
+                debounceTimer: null,
+                currentView: 'default',
+                searchResultsQuery: '',
+                searchResults: [],
+                filteredResults: [],
+                resultsSortBy: 'relevance',
+                resultsViewMode: 'list',
+                activeFilters: { categories: [], brands: [], automation: [], standards: [] },
+                expandedFilterSections: ['categories', 'brands'],
+                contentResults: { nieuws: [], support: [], jobs: [] },
+
+                // === Navigation data ===
+                mainNavLeft: [
+                    { label: 'Meetapparatuur' },
+                    { label: 'Optimalisatie' },
+                    { label: 'Productie' },
+                ],
+                mainNavRight: [
+                    { label: 'Nieuws' },
+                    { label: 'Jobs (3)' },
+                    { label: 'Onze divisies' },
+                    { label: 'Support' },
+                ],
+                categories: [
+                    { label: 'Testeigenschap', hasChildren: true },
+                    { label: 'Industrie', hasChildren: true },
+                    { label: 'Testnorm', hasChildren: true },
+                    { label: 'Onderdelen & accessoires', hasChildren: false },
+                ],
+                megaFilters: [
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Fysieke eigenschappen', count: 29 },
+                    { label: 'Gesteentemechanica', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
+                ],
+
+                // === Mock Products ===
+                mockProducts: [
+                    { id: 1, series: 'OPTIDIST 2', name: 'OptiDist 2 Automated Atmospheric Distillation Analyzer', standard: 'ASTM D86', brand: 'Optimus', category: 'Petroleum', subcategory: 'Distillation', automation: 'Volledig automatisch', range: '0\u2013400\u00B0C', features: ['Automatic drift correction', 'Digital calibration', 'Multi-sample changer'], description: 'De OptiDist 2 is de state-of-the-art oplossing voor atmosferische destillatie, met de hoogste precisie en gebruiksgemak.', isNew: true },
+                    { id: 2, series: 'OPTIDIST 1', name: 'OptiDist 1 Semi-Automatic Distillation Analyzer', standard: 'ASTM D86', brand: 'Optimus', category: 'Petroleum', subcategory: 'Distillation', automation: 'Semi-automatisch', range: '0\u2013400\u00B0C', features: ['Digital calibration', 'Manual sample loading'], description: 'Betrouwbare semi-automatische destillatie-analyse voor routine laboratoriumwerk.', isNew: false },
+                    { id: 3, series: 'OPTIFLASH', name: 'OptiFlash 2 Automatic Flash Point Analyzer', standard: 'ASTM D93', brand: 'Optimus', category: 'Petroleum', subcategory: 'Flash point', automation: 'Volledig automatisch', range: '-30\u2013400\u00B0C', features: ['Pensky-Martens closed cup', 'Auto lid mechanism', 'Drift correction'], description: 'Geavanceerde vlampuntbepaling met volledige automatisering en uitzonderlijke herhaalbaarheid.', isNew: true },
+                    { id: 4, series: 'OPTIFLASH', name: 'OptiFlash 1 Semi-Automatic Flash Point Tester', standard: 'ASTM D93', brand: 'Optimus', category: 'Petroleum', subcategory: 'Flash point', automation: 'Semi-automatisch', range: '-30\u2013370\u00B0C', features: ['Pensky-Martens closed cup', 'Manual ignition'], description: 'Kosteneffici\u00EBnte vlampuntbepaling voor standaard laboratoriumtoepassingen.', isNew: false },
+                    { id: 5, series: 'MINIFLASH', name: 'MiniFlash Touch Small Scale Flash Point Tester', standard: 'ASTM D3828', brand: 'Grabner', category: 'Petroleum', subcategory: 'Flash point', automation: 'Volledig automatisch', range: '-25\u2013300\u00B0C', features: ['Small scale closed cup', 'Touchscreen', 'Rapid testing'], description: 'Compacte vlampunttester voor snelle screeningstesten met minimaal monstervolume.', isNew: false },
+                    { id: 6, series: 'OPTIVISC', name: 'OptiVisc 2 Automatic Kinematic Viscosimeter', standard: 'ASTM D445', brand: 'Optimus', category: 'Petroleum', subcategory: 'Viscosity', automation: 'Volledig automatisch', range: '0.5\u201310,000 cSt', features: ['Dual bath system', 'Automatic timing', 'Temperature control \u00B10.01\u00B0C'], description: 'Hoogprecisie kinematische viscositeitsmeting met dubbel badsysteem voor maximale doorvoer.', isNew: true },
+                    { id: 7, series: 'OPTIVISC', name: 'OptiVisc 1 Manual Viscosity Bath', standard: 'ASTM D445', brand: 'Optimus', category: 'Petroleum', subcategory: 'Viscosity', automation: 'Manueel', range: '0.5\u2013100,000 cSt', features: ['Glass capillary', 'Manual timing', 'Wide range'], description: 'Klassiek viscositeitsbad voor handmatige kinematische viscositeitsmetingen.', isNew: false },
+                    { id: 8, series: 'OPTIPOUR', name: 'OptiPour Automatic Pour Point & Cloud Point Analyzer', standard: 'ASTM D97 / ASTM D2500', brand: 'Optimus', category: 'Petroleum', subcategory: 'Cold properties', automation: 'Volledig automatisch', range: '-80\u00B0C tot +51\u00B0C', features: ['Dual determination', 'Optical detection', '8-position sample changer'], description: 'Simultane stol- en troebelpuntbepaling met optische detectie voor maximale nauwkeurigheid.', isNew: false },
+                    { id: 9, series: 'OPTIPRESS', name: 'OptiPress Universal Testing Machine 100kN', standard: 'ISO 527 / ASTM D638', brand: 'Optimus', category: 'Asfalt', subcategory: 'Bindmiddelgehalte', automation: 'Volledig automatisch', range: '0.1\u2013100 kN', features: ['Dual column', 'Extensometer ready', 'Touch controller'], description: 'Universele trekbank voor trek-, druk- en buigproeven op materialen en producten.', isNew: true },
+                    { id: 10, series: 'OPTIPENET', name: 'OptiPenet Automatic Penetrometer', standard: 'EN 1426 / ASTM D5', brand: 'Optimus', category: 'Asfalt', subcategory: 'Fysieke eigenschappen', automation: 'Volledig automatisch', range: '0\u2013450 \u00D70.1mm', features: ['Automatic needle alignment', 'Digital readout', 'Temperature compensated'], description: 'Automatische penetratiemeting voor bitumen en asfaltbindmiddelen.', isNew: false },
+                    { id: 11, series: 'ACCESSORIES', name: 'Capillaire Buizen Set voor OptiVisc', standard: 'ASTM D445', brand: 'Optimus', category: 'Onderdelen & accessoires', subcategory: 'Viscosity accessories', automation: 'N/A', range: 'Diverse bereiken', features: ['Calibrated', 'UKAS traceable', 'Set of 6'], description: 'Gekalibreerde capillaire buizen compatibel met OptiVisc 1 en OptiVisc 2.', isNew: false },
+                    { id: 12, series: 'ACCESSORIES', name: 'Flash Point Cup Replacement Kit', standard: 'ASTM D93', brand: 'Optimus', category: 'Onderdelen & accessoires', subcategory: 'Flash point accessories', automation: 'N/A', range: 'N/A', features: ['Pensky-Martens cup', 'Stainless steel', 'Includes lid and stirrer'], description: 'Vervangingskit voor de Pensky-Martens cup, compatibel met OptiFlash 1 en 2.', isNew: false },
+                ],
+
+                // === Query Suggestions ===
+                querySuggestionMap: {
+                    'flash': [
+                        { text: 'flash point tester', scope: null },
+                        { text: 'flash point', scope: 'Petroleum', count: 12 },
+                        { text: 'flash point', scope: 'Chemie', count: 3 },
+                        { text: 'flash point cup replacement', scope: null },
+                    ],
+                    'astm': [
+                        { text: 'ASTM D86', scope: null },
+                        { text: 'ASTM D93', scope: null },
+                        { text: 'ASTM D445', scope: null },
+                        { text: 'ASTM D97', scope: null },
+                    ],
+                    'dist': [
+                        { text: 'distillation analyzer', scope: null },
+                        { text: 'distillation', scope: 'Petroleum', count: 8 },
+                    ],
+                    'visc': [
+                        { text: 'viscosimeter', scope: null },
+                        { text: 'viscosity', scope: 'Petroleum', count: 6 },
+                        { text: 'viscosity bath', scope: null },
+                    ],
+                    'pour': [
+                        { text: 'pour point analyzer', scope: null },
+                        { text: 'pour point', scope: 'Petroleum', count: 4 },
+                    ],
+                    'opti': [
+                        { text: 'OptiDist', scope: null },
+                        { text: 'OptiFlash', scope: null },
+                        { text: 'OptiVisc', scope: null },
+                        { text: 'OptiPour', scope: null },
+                    ],
+                    'penet': [
+                        { text: 'penetrometer', scope: null },
+                        { text: 'penetratie', scope: 'Asfalt', count: 5 },
+                    ],
+                    'dest': [
+                        { text: 'destillatie analyzer', scope: null },
+                        { text: 'distillation analyzer', scope: null },
+                    ],
+                },
+
+                // === Non-Product Content ===
+                nonProductContent: {
+                    nieuws: [
+                        { title: 'Flexduurzaamheid testen? Ontdek de nieuwe Rycolab Flex Testers', date: '15 maart 2026', category: 'Beurzen', url: '/nieuws/rycolab-flex-testers', keywords: ['flex', 'beurzen', 'rycolab', 'duurzaamheid', 'tester'] },
+                        { title: 'ASTM D86 vs. ASTM D1160: Welke destillatienorm past bij uw toepassing?', date: '28 februari 2026', category: 'Technisch', url: '/nieuws/astm-d86-vs-d1160', keywords: ['astm', 'd86', 'd1160', 'distillation', 'destillatie', 'petroleum', 'norm'] },
+                        { title: 'Optimus Instruments op Analytica 2026 \u2014 Stand B2.312', date: '1 maart 2026', category: 'Evenementen', url: '/nieuws/analytica-2026', keywords: ['analytica', 'beurs', 'evenement', 'petroleum'] },
+                        { title: 'Viscositeitsmeting in de voedingsindustrie: toepassingen en uitdagingen', date: '20 januari 2026', category: 'Technisch', url: '/nieuws/viscositeit-voedingsindustrie', keywords: ['viscosity', 'viscositeit', 'voeding', 'food'] },
+                    ],
+                    support: [
+                        { title: 'Hoe kalibreer ik mijn OptiFlash 2?', format: 'FAQ', url: '/support/faq/optiflash-kalibratie', keywords: ['optiflash', 'kalibratie', 'calibration', 'flash', 'point'] },
+                        { title: 'OptiDist 2 \u2014 Gebruikershandleiding', format: 'Download', url: '/support/downloads/optidist2-manual.pdf', keywords: ['optidist', 'manual', 'handleiding', 'distillation', 'd86'] },
+                        { title: 'Nieuwe firmware-update voor OptiFlash-serie (v3.2)', format: 'Download', url: '/support/downloads/optiflash-firmware-v32', keywords: ['optiflash', 'firmware', 'update', 'software', 'flash'] },
+                        { title: 'Veelgestelde vragen over ASTM D445 viscositeitstesten', format: 'FAQ', url: '/support/faq/astm-d445', keywords: ['astm', 'd445', 'viscosity', 'viscositeit', 'faq'] },
+                        { title: 'OptiVisc 2 \u2014 Quick Start Guide', format: 'Download', url: '/support/downloads/optivisc2-quickstart.pdf', keywords: ['optivisc', 'viscosity', 'quick start', 'handleiding'] },
+                        { title: 'Onderhoudsschema OptiPour Cold Properties Analyzer', format: 'Download', url: '/support/downloads/optipour-maintenance.pdf', keywords: ['optipour', 'pour point', 'onderhoud', 'maintenance', 'cold'] },
+                    ],
+                    jobs: [
+                        { title: 'Service Engineer Petroleum Testing', location: 'Zaventem', contract: 'Voltijds', category: 'Petroleum', url: '/jobs/service-engineer-petroleum', keywords: ['service', 'engineer', 'petroleum', 'technician'] },
+                        { title: 'Field Application Specialist \u2014 Asfalt & Constructie', location: 'Gent', contract: 'Voltijds', category: 'Asfalt', url: '/jobs/field-application-specialist-asfalt', keywords: ['application', 'specialist', 'asfalt', 'field'] },
+                        { title: 'Sales Engineer Benelux', location: 'Zaventem', contract: 'Voltijds', category: 'Sales', url: '/jobs/sales-engineer-benelux', keywords: ['sales', 'engineer', 'benelux'] },
+                        { title: 'Lab Technician \u2014 Demonstratie & Training', location: 'Zaventem', contract: 'Voltijds', category: 'Support', url: '/jobs/lab-technician', keywords: ['lab', 'technician', 'training', 'demonstratie'] },
+                    ],
+                },
+
+                // === Computed: navigation ===
+                get currentNavLabel() {
+                    return this.mainNavLeft[this.openMenu]?.label || '';
+                },
+                get subcategories() {
+                    const map = {
+                        0: [
+                            { label: 'Asfalt' }, { label: 'Beton' }, { label: 'Bitumen' },
+                            { label: 'Bodems' }, { label: 'Cement' }, { label: 'Chemie' },
+                            { label: 'Diktemeting' }, { label: 'Drank testen' }, { label: 'Gasanalyse' },
+                            { label: 'Gewicht' }, { label: 'Glans & coating' }, { label: 'Granulaten & Aggregaten' },
+                            { label: 'Karton' }, { label: 'Kracht (opnemers)' }, { label: 'Monster voorbereiding' },
+                            { label: 'Papier & pulp testing' }, { label: 'Petroleum' }, { label: 'Reagent & standards' },
+                            { label: 'Staal & metaal' }, { label: 'Temperature Calibration & logging' },
+                            { label: 'Textiel' }, { label: 'Transport simulatie' }, { label: 'Verpakking & Film' },
+                            { label: 'Verwerking & klimaat' }, { label: 'Vochtmeting' }, { label: 'Zoutnevel en corrosie' },
+                        ],
+                        1: [
+                            { label: 'Bouw & infrastructuur' }, { label: 'Chemische industrie' },
+                            { label: 'Farmaceutisch' }, { label: 'Voeding & drank' }, { label: 'Textiel & kleding' },
+                        ],
+                        2: [
+                            { label: 'EN 12697' }, { label: 'EN 1426' }, { label: 'EN 1427' },
+                            { label: 'EN 13108' }, { label: 'ASTM D5' },
+                        ],
+                    };
+                    return map[this.activeCategory] || [];
+                },
+                get activeSubcategoryLabel() {
+                    return this.subcategories[this.activeSubcategory]?.label || '';
+                },
+                get activeCategoryHasChildren() {
+                    return this.categories[this.activeCategory]?.hasChildren ?? false;
+                },
+
+                // === Computed: search ===
+                get acProductBaseIndex() {
+                    return Math.min(this.autocompleteResults.suggestions.length, 4);
+                },
+                get acContentBaseIndex() {
+                    return this.acProductBaseIndex + Math.min(this.autocompleteResults.products.length, 4);
+                },
+                get acAllResultsIndex() {
+                    return this.acContentBaseIndex + Math.min(this.autocompleteResults.content.length, 2);
+                },
+                get acTotalItems() {
+                    return this.acAllResultsIndex + 1;
+                },
+                get hasActiveFilters() {
+                    return this.activeFilters.categories.length > 0 ||
+                        this.activeFilters.brands.length > 0 ||
+                        this.activeFilters.automation.length > 0 ||
+                        this.activeFilters.standards.length > 0;
+                },
+                get allActiveFilterChips() {
+                    const chips = [];
+                    for (const [type, values] of Object.entries(this.activeFilters)) {
+                        for (const val of values) {
+                            chips.push({ type, value: val });
+                        }
+                    }
+                    return chips;
+                },
+                get availableCategories() {
+                    return [...new Set(this.searchResults.map(p => p.category))];
+                },
+                get availableBrands() {
+                    return [...new Set(this.searchResults.map(p => p.brand))];
+                },
+                get availableAutomation() {
+                    return [...new Set(this.searchResults.map(p => p.automation).filter(a => a !== 'N/A'))];
+                },
+                get availableStandards() {
+                    return [...new Set(this.searchResults.flatMap(p => p.standard.split(' / ')))];
+                },
+
+                // === Navigation methods ===
+                navHoverTimer: null,
+                handleNavHover(index) {
+                    this.cancelCloseTimer();
+                    if (this.openMenu !== null && this.openMenu !== index) {
+                        this.openMenu = index;
+                        this.activeCategory = 0;
+                        this.activeSubcategory = 0;
+                        this.activeFilter = null;
+                    } else if (this.openMenu === null) {
+                        clearTimeout(this.navHoverTimer);
+                        this.navHoverTimer = setTimeout(() => {
+                            this.openMenu = index;
+                            this.activeCategory = 0;
+                            this.activeSubcategory = 0;
+                            this.activeFilter = null;
+                        }, 200);
+                    }
+                },
+                startCloseTimer() {
+                    clearTimeout(this.navHoverTimer);
+                    this.navHoverTimer = null;
+                    if (this.openMenu === null) return;
+                    this.closeTimer = setTimeout(() => { this.openMenu = null; }, 400);
+                },
+                cancelCloseTimer() {
+                    if (this.closeTimer) { clearTimeout(this.closeTimer); this.closeTimer = null; }
+                },
+                selectCategory(catIdx) {
+                    if (!this.categories[catIdx].hasChildren) {
+                        this.selectedPage = this.categories[catIdx].label;
+                        this.closeMenu();
+                        return;
+                    }
+                    this.activeCategory = catIdx;
+                    this.activeSubcategory = 0;
+                    this.activeFilter = null;
+                },
+                selectSubcategory(subIdx) {
+                    this.activeSubcategory = subIdx;
+                    this.activeFilter = null;
+                },
+                toggleMenu(index) {
+                    this.cancelCloseTimer();
+                    this.activeRightNav = null;
+                    if (this.openMenu === index) { this.closeMenu(); }
+                    else {
+                        this.openMenu = index;
+                        this.activeCategory = 0;
+                        this.activeSubcategory = 0;
+                        this.activeFilter = null;
+                    }
+                },
+                closeMenu() {
+                    this.cancelCloseTimer();
+                    clearTimeout(this.navHoverTimer);
+                    this.navHoverTimer = null;
+                    this.openMenu = null;
+                },
+                selectPage(label) {
+                    this.selectedPage = label;
+                    this.currentView = 'default';
+                    this.closeMenu();
+                },
+
+                // === Search methods ===
+                onSearchInput() {
+                    clearTimeout(this.debounceTimer);
+                    if (this.searchQuery.length < 2) {
+                        this.showAutocomplete = false;
+                        this.acHighlightIndex = -1;
+                        return;
+                    }
+                    this.debounceTimer = setTimeout(() => {
+                        this.computeAutocomplete();
+                    }, 200);
+                },
+
+                onSearchFocus() {
+                    if (this.searchQuery.length >= 2) {
+                        this.computeAutocomplete();
+                    }
+                },
+
+                computeAutocomplete() {
+                    const q = this.searchQuery.toLowerCase().trim();
+                    if (q.length < 2) { this.showAutocomplete = false; return; }
+
+                    // Find matching suggestions
+                    let suggestions = [];
+                    for (const [key, items] of Object.entries(this.querySuggestionMap)) {
+                        if (key.startsWith(q) || q.startsWith(key)) {
+                            suggestions = suggestions.concat(items);
+                        }
+                    }
+                    // Also check if the full query matches any suggestion text
+                    if (suggestions.length === 0) {
+                        for (const [key, items] of Object.entries(this.querySuggestionMap)) {
+                            for (const item of items) {
+                                if (item.text.toLowerCase().includes(q)) {
+                                    suggestions.push(item);
+                                }
+                            }
+                        }
+                    }
+                    // Deduplicate
+                    const seen = new Set();
+                    suggestions = suggestions.filter(s => {
+                        const key = s.text + (s.scope || '');
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                    });
+
+                    // Find matching products
+                    const products = this.mockProducts.filter(p => {
+                        const searchable = [p.name, p.series, p.standard, p.brand, p.description, p.subcategory, ...p.features].join(' ').toLowerCase();
+                        return searchable.includes(q);
+                    });
+
+                    // Find matching non-product content (prioritize: support/FAQ first, then nieuws, then jobs)
+                    const contentMatches = [];
+                    for (const item of this.nonProductContent.support) {
+                        if (item.keywords.some(k => k.includes(q) || q.includes(k)) || item.title.toLowerCase().includes(q)) {
+                            contentMatches.push({ ...item, tag: item.format });
+                        }
+                    }
+                    for (const item of this.nonProductContent.nieuws) {
+                        if (item.keywords.some(k => k.includes(q) || q.includes(k)) || item.title.toLowerCase().includes(q)) {
+                            contentMatches.push({ ...item, tag: 'Artikel' });
+                        }
+                    }
+                    for (const item of this.nonProductContent.jobs) {
+                        if (item.keywords.some(k => k.includes(q) || q.includes(k)) || item.title.toLowerCase().includes(q)) {
+                            contentMatches.push({ ...item, tag: 'Job' });
+                        }
+                    }
+
+                    this.autocompleteResults = { suggestions: suggestions.slice(0, 4), products: products.slice(0, 4), content: contentMatches.slice(0, 2) };
+                    this.acHighlightIndex = -1;
+                    this.showAutocomplete = true;
+                },
+
+                clearSearch() {
+                    this.searchQuery = '';
+                    this.showAutocomplete = false;
+                    this.acHighlightIndex = -1;
+                },
+
+                submitSearch(query) {
+                    const q = query || this.searchQuery;
+                    if (!q.trim()) return;
+                    this.searchQuery = q;
+                    this.searchResultsQuery = q;
+                    this.showAutocomplete = false;
+                    this.acHighlightIndex = -1;
+                    this.activeFilters = { categories: [], brands: [], automation: [], standards: [] };
+                    this.computeSearchResults();
+                    this.currentView = 'searchResults';
+                    this.openMenu = null;
+                    window.scrollTo(0, 0);
+                },
+
+                submitSearchWithCategory(query, category) {
+                    this.searchQuery = query;
+                    this.searchResultsQuery = query;
+                    this.showAutocomplete = false;
+                    this.acHighlightIndex = -1;
+                    this.activeFilters = { categories: category ? [category] : [], brands: [], automation: [], standards: [] };
+                    this.computeSearchResults();
+                    this.currentView = 'searchResults';
+                    this.openMenu = null;
+                    window.scrollTo(0, 0);
+                },
+
+                computeSearchResults() {
+                    const q = this.searchResultsQuery.toLowerCase().trim();
+                    this.searchResults = this.mockProducts.filter(p => {
+                        const searchable = [p.name, p.series, p.standard, p.brand, p.description, p.category, p.subcategory, ...p.features].join(' ').toLowerCase();
+                        return searchable.includes(q);
+                    });
+                    // Compute non-product content results
+                    const matchContent = (item) => item.keywords.some(k => k.includes(q) || q.includes(k)) || item.title.toLowerCase().includes(q);
+                    this.contentResults = {
+                        nieuws: this.nonProductContent.nieuws.filter(matchContent).slice(0, 2),
+                        support: this.nonProductContent.support.filter(matchContent).slice(0, 2),
+                        jobs: this.nonProductContent.jobs.filter(matchContent).slice(0, 2),
+                    };
+                    this.applyFilters();
+                },
+
+                applyFilters() {
+                    let results = [...this.searchResults];
+                    if (this.activeFilters.categories.length > 0) {
+                        results = results.filter(p => this.activeFilters.categories.includes(p.category));
+                    }
+                    if (this.activeFilters.brands.length > 0) {
+                        results = results.filter(p => this.activeFilters.brands.includes(p.brand));
+                    }
+                    if (this.activeFilters.automation.length > 0) {
+                        results = results.filter(p => this.activeFilters.automation.includes(p.automation));
+                    }
+                    if (this.activeFilters.standards.length > 0) {
+                        results = results.filter(p => this.activeFilters.standards.some(s => p.standard.includes(s)));
+                    }
+                    // Sort
+                    if (this.resultsSortBy === 'name-asc') {
+                        results.sort((a, b) => a.name.localeCompare(b.name));
+                    } else if (this.resultsSortBy === 'name-desc') {
+                        results.sort((a, b) => b.name.localeCompare(a.name));
+                    }
+                    this.filteredResults = results;
+                },
+
+                selectSuggestion(sug) {
+                    if (sug.scope) {
+                        this.submitSearchWithCategory(sug.text, sug.scope);
+                    } else {
+                        this.submitSearch(sug.text);
+                    }
+                },
+
+                selectAutocompleteProduct(product) {
+                    this.selectedPage = product.name;
+                    this.currentView = 'default';
+                    this.showAutocomplete = false;
+                    this.acHighlightIndex = -1;
+                },
+
+                highlightMatch(text, query) {
+                    if (!query || query.length < 2) return text;
+                    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${escaped})`, 'gi');
+                    return text.replace(regex, '<strong class="font-bold">$1</strong>');
+                },
+
+                formatSuggestion(sug) {
+                    let html = this.highlightMatch(sug.text, this.searchQuery);
+                    if (sug.scope) {
+                        html += ' <span class="text-[#94A3B8]">in ' + sug.scope + ' (' + sug.count + ')</span>';
+                    }
+                    return html;
+                },
+
+                handleSearchKeydown(event) {
+                    if (!this.showAutocomplete) {
+                        if (event.key === 'Enter') { this.submitSearch(); event.preventDefault(); }
+                        return;
+                    }
+                    const total = this.acTotalItems;
+                    if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        this.acHighlightIndex = this.acHighlightIndex >= total - 1 ? 0 : this.acHighlightIndex + 1;
+                    } else if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        this.acHighlightIndex = this.acHighlightIndex <= 0 ? total - 1 : this.acHighlightIndex - 1;
+                    } else if (event.key === 'Enter') {
+                        event.preventDefault();
+                        if (this.acHighlightIndex < 0 || this.acHighlightIndex >= this.acAllResultsIndex) {
+                            this.submitSearch();
+                        } else if (this.acHighlightIndex < this.acProductBaseIndex) {
+                            this.selectSuggestion(this.autocompleteResults.suggestions[this.acHighlightIndex]);
+                        } else if (this.acHighlightIndex < this.acContentBaseIndex) {
+                            const pIdx = this.acHighlightIndex - this.acProductBaseIndex;
+                            this.selectAutocompleteProduct(this.autocompleteResults.products[pIdx]);
+                        } else {
+                            // Content item selected — navigate to its page
+                            const cIdx = this.acHighlightIndex - this.acContentBaseIndex;
+                            const item = this.autocompleteResults.content[cIdx];
+                            if (item) { this.selectedPage = item.title; this.currentView = 'default'; this.showAutocomplete = false; this.acHighlightIndex = -1; }
+                        }
+                    } else if (event.key === 'Escape') {
+                        this.showAutocomplete = false;
+                        this.acHighlightIndex = -1;
+                    }
+                },
+
+                // === Filter methods ===
+                toggleFilter(type, value) {
+                    const idx = this.activeFilters[type].indexOf(value);
+                    if (idx > -1) { this.activeFilters[type].splice(idx, 1); }
+                    else { this.activeFilters[type].push(value); }
+                    this.applyFilters();
+                },
+                removeFilter(type, value) {
+                    const idx = this.activeFilters[type].indexOf(value);
+                    if (idx > -1) { this.activeFilters[type].splice(idx, 1); }
+                    this.applyFilters();
+                },
+                clearAllFilters() {
+                    this.activeFilters = { categories: [], brands: [], automation: [], standards: [] };
+                    this.applyFilters();
+                },
+                toggleFilterSection(section) {
+                    const idx = this.expandedFilterSections.indexOf(section);
+                    if (idx > -1) { this.expandedFilterSections.splice(idx, 1); }
+                    else { this.expandedFilterSections.push(section); }
+                },
+                countByCategory(cat) {
+                    return this.searchResults.filter(p => p.category === cat).length;
+                },
+            }
+        }
+    </script>
+
+</body>
+
+</html>
