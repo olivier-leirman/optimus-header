@@ -85,7 +85,7 @@
             </a>
 
             <!-- Search -->
-            <div class="flex-1 max-w-[600px] mx-8 relative" @click.away="showAutocomplete = false">
+            <div class="flex-1 max-w-[600px] mx-8 relative" @click.away="showAutocomplete = false; showEmptyState = false">
                 <div class="relative">
                     <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" viewBox="0 0 20 20" fill="none">
                         <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5" />
@@ -210,6 +210,96 @@
                             </button>
                         </div>
                     </template>
+                </div>
+
+                <!-- Empty State Dropdown -->
+                <div x-show="showEmptyState && !showAutocomplete" x-cloak
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E2E8F0] rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.08)] z-[60] overflow-hidden">
+
+                    <!-- Recente zoekopdrachten -->
+                    <div x-show="recentSearches.length > 0" class="py-2">
+                        <div class="px-4 py-1.5 flex items-center justify-between">
+                            <span class="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Recente zoekopdrachten</span>
+                            <button @click="clearRecentSearches()" class="text-[12px] font-medium text-brand-dark hover:text-brand-darkest hover:underline">Wissen</button>
+                        </div>
+                        <template x-for="(query, rIdx) in recentSearches" :key="'recent-'+rIdx">
+                            <button @click="selectEmptyStateQuery(query)"
+                                @mouseenter="acHighlightIndex = rIdx"
+                                class="w-full flex items-center gap-2.5 px-4 py-2 text-left text-sm transition-colors duration-100 group/recent"
+                                :class="acHighlightIndex === rIdx ? 'bg-[#F0F4FF]' : 'hover:bg-[#F0F4FF]'">
+                                <svg class="w-4 h-4 text-[#94A3B8] shrink-0" viewBox="0 0 20 20" fill="none">
+                                    <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M10 6.5V10l2.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span class="text-gray-700 flex-1" x-text="query"></span>
+                                <span @click.stop="removeRecentSearch(rIdx)"
+                                    class="opacity-0 group-hover/recent:opacity-100 text-[#94A3B8] hover:text-red-500 p-0.5 transition-all">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none">
+                                        <path d="M10 4L4 10M4 4l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Divider -->
+                    <div x-show="recentSearches.length > 0" class="border-t border-[#E2E8F0]"></div>
+
+                    <!-- Populaire zoekopdrachten -->
+                    <div class="py-2">
+                        <div class="px-4 py-1.5">
+                            <span class="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Populaire zoekopdrachten</span>
+                        </div>
+                        <template x-for="(query, pqIdx) in popularQueries" :key="'popular-'+pqIdx">
+                            <button @click="selectEmptyStateQuery(query)"
+                                @mouseenter="acHighlightIndex = esPopularBaseIndex + pqIdx"
+                                class="w-full flex items-center gap-2.5 px-4 py-2 text-left text-sm transition-colors duration-100"
+                                :class="acHighlightIndex === (esPopularBaseIndex + pqIdx) ? 'bg-[#F0F4FF]' : 'hover:bg-[#F0F4FF]'">
+                                <svg class="w-4 h-4 text-[#94A3B8] shrink-0" viewBox="0 0 20 20" fill="none">
+                                    <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                                <span class="text-gray-700" x-text="query"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t border-[#E2E8F0]"></div>
+
+                    <!-- Populaire producten -->
+                    <div class="py-2">
+                        <div class="px-4 py-1.5">
+                            <span class="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Populaire producten</span>
+                        </div>
+                        <template x-for="(prod, ppIdx) in popularProducts" :key="'popprod-'+prod.id">
+                            <button @click="selectAutocompleteProduct(prod); showEmptyState = false"
+                                @mouseenter="acHighlightIndex = esProductBaseIndex + ppIdx"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100"
+                                :class="acHighlightIndex === (esProductBaseIndex + ppIdx) ? 'bg-[#F0F4FF]' : 'hover:bg-[#F0F4FF]'">
+                                <div class="w-12 h-12 bg-surface-sunken rounded flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-content-tertiary/50" viewBox="0 0 20 20" fill="none">
+                                        <rect x="2" y="2" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                                        <circle cx="7" cy="7" r="1.5" fill="currentColor"/>
+                                        <path d="M2 14l4-4 3 3 4-5 5 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-brand-dark truncate" x-text="prod.name"></p>
+                                    <p class="text-[13px] text-[#64748B] truncate">
+                                        <span x-text="prod.brand.toUpperCase()"></span>
+                                        <span class="mx-1">&middot;</span>
+                                        <span x-text="prod.standard"></span>
+                                        <span class="mx-1">&middot;</span>
+                                        <span x-text="prod.automation"></span>
+                                    </p>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
                 </div>
             </div>
 
@@ -723,9 +813,12 @@
                 // === Search state ===
                 searchQuery: '',
                 showAutocomplete: false,
+                showEmptyState: false,
                 autocompleteResults: { suggestions: [], products: [], content: [] },
                 acHighlightIndex: -1,
                 debounceTimer: null,
+                recentSearches: JSON.parse(localStorage.getItem('recentSearches') || '[]').slice(0, 3),
+                popularQueries: ['flash point analyzer', 'viscosimeter', 'ASTM D445', 'penetrometer'],
                 currentView: 'default',
                 searchResultsQuery: '',
                 searchResults: [],
@@ -886,6 +979,17 @@
                     return this.categories[this.activeCategory]?.hasChildren ?? false;
                 },
 
+                // === Computed: popular products ===
+                get popularProducts() {
+                    return this.mockProducts.filter(p => p.isNew).slice(0, 2);
+                },
+
+                // === Computed: empty state keyboard nav ===
+                get esRecentCount() { return this.recentSearches.length; },
+                get esPopularBaseIndex() { return this.esRecentCount; },
+                get esProductBaseIndex() { return this.esPopularBaseIndex + this.popularQueries.length; },
+                get esTotalItems() { return this.esProductBaseIndex + this.popularProducts.length; },
+
                 // === Computed: search ===
                 get acProductBaseIndex() {
                     return Math.min(this.autocompleteResults.suggestions.length, 4);
@@ -997,9 +1101,11 @@
                     clearTimeout(this.debounceTimer);
                     if (this.searchQuery.length < 2) {
                         this.showAutocomplete = false;
+                        this.showEmptyState = true;
                         this.acHighlightIndex = -1;
                         return;
                     }
+                    this.showEmptyState = false;
                     this.debounceTimer = setTimeout(() => {
                         this.computeAutocomplete();
                     }, 200);
@@ -1008,6 +1114,9 @@
                 onSearchFocus() {
                     if (this.searchQuery.length >= 2) {
                         this.computeAutocomplete();
+                    } else {
+                        this.showEmptyState = true;
+                        this.acHighlightIndex = -1;
                     }
                 },
 
@@ -1073,15 +1182,43 @@
                 clearSearch() {
                     this.searchQuery = '';
                     this.showAutocomplete = false;
+                    this.showEmptyState = true;
                     this.acHighlightIndex = -1;
+                },
+
+                saveRecentSearch(query) {
+                    const q = query.trim();
+                    if (!q) return;
+                    this.recentSearches = this.recentSearches.filter(s => s.toLowerCase() !== q.toLowerCase());
+                    this.recentSearches.unshift(q);
+                    this.recentSearches = this.recentSearches.slice(0, 3);
+                    localStorage.setItem('recentSearches', JSON.stringify(this.recentSearches));
+                },
+
+                clearRecentSearches() {
+                    this.recentSearches = [];
+                    localStorage.removeItem('recentSearches');
+                },
+
+                removeRecentSearch(index) {
+                    this.recentSearches.splice(index, 1);
+                    localStorage.setItem('recentSearches', JSON.stringify(this.recentSearches));
+                },
+
+                selectEmptyStateQuery(query) {
+                    this.searchQuery = query;
+                    this.showEmptyState = false;
+                    this.submitSearch(query);
                 },
 
                 submitSearch(query) {
                     const q = query || this.searchQuery;
                     if (!q.trim()) return;
+                    this.saveRecentSearch(q);
                     this.searchQuery = q;
                     this.searchResultsQuery = q;
                     this.showAutocomplete = false;
+                    this.showEmptyState = false;
                     this.acHighlightIndex = -1;
                     this.activeFilters = { categories: [], brands: [], automation: [], standards: [] };
                     this.computeSearchResults();
@@ -1091,9 +1228,11 @@
                 },
 
                 submitSearchWithCategory(query, category) {
+                    this.saveRecentSearch(query);
                     this.searchQuery = query;
                     this.searchResultsQuery = query;
                     this.showAutocomplete = false;
+                    this.showEmptyState = false;
                     this.acHighlightIndex = -1;
                     this.activeFilters = { categories: category ? [category] : [], brands: [], automation: [], standards: [] };
                     this.computeSearchResults();
@@ -1172,6 +1311,32 @@
                 },
 
                 handleSearchKeydown(event) {
+                    // Empty state keyboard nav
+                    if (this.showEmptyState && !this.showAutocomplete) {
+                        const total = this.esTotalItems;
+                        if (event.key === 'ArrowDown') {
+                            event.preventDefault();
+                            this.acHighlightIndex = this.acHighlightIndex >= total - 1 ? 0 : this.acHighlightIndex + 1;
+                        } else if (event.key === 'ArrowUp') {
+                            event.preventDefault();
+                            this.acHighlightIndex = this.acHighlightIndex <= 0 ? total - 1 : this.acHighlightIndex - 1;
+                        } else if (event.key === 'Enter' && this.acHighlightIndex >= 0) {
+                            event.preventDefault();
+                            if (this.acHighlightIndex < this.esPopularBaseIndex) {
+                                this.selectEmptyStateQuery(this.recentSearches[this.acHighlightIndex]);
+                            } else if (this.acHighlightIndex < this.esProductBaseIndex) {
+                                this.selectEmptyStateQuery(this.popularQueries[this.acHighlightIndex - this.esPopularBaseIndex]);
+                            } else {
+                                const prod = this.popularProducts[this.acHighlightIndex - this.esProductBaseIndex];
+                                if (prod) this.selectAutocompleteProduct(prod);
+                            }
+                        } else if (event.key === 'Escape') {
+                            this.showEmptyState = false;
+                            this.acHighlightIndex = -1;
+                        }
+                        return;
+                    }
+
                     if (!this.showAutocomplete) {
                         if (event.key === 'Enter') { this.submitSearch(); event.preventDefault(); }
                         return;
@@ -1193,7 +1358,6 @@
                             const pIdx = this.acHighlightIndex - this.acProductBaseIndex;
                             this.selectAutocompleteProduct(this.autocompleteResults.products[pIdx]);
                         } else {
-                            // Content item selected — navigate to its page
                             const cIdx = this.acHighlightIndex - this.acContentBaseIndex;
                             const item = this.autocompleteResults.content[cIdx];
                             if (item) { this.selectedPage = item.title; this.currentView = 'default'; this.showAutocomplete = false; this.acHighlightIndex = -1; }
