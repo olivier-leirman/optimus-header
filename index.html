@@ -397,9 +397,24 @@
 
                 <!-- Results Header -->
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-semibold text-brand-dark">
-                        <span x-text="filteredResults.length"></span> resultaten voor "<span x-text="searchResultsQuery" class="font-bold"></span>"
-                    </h2>
+                    <div>
+                        <h2 class="text-xl font-semibold text-brand-dark">
+                            <span x-text="filteredResults.length"></span> resultaten voor "<span x-text="searchResultsQuery" class="font-bold"></span>"
+                        </h2>
+                        <div x-show="contentResults.nieuws.length > 0 || contentResults.support.length > 0 || contentResults.jobs.length > 0"
+                            class="flex items-center gap-1.5 mt-1 text-sm text-[#64748B]">
+                            <span x-text="filteredResults.length + ' producten'"></span>
+                            <template x-if="contentResults.nieuws.length > 0">
+                                <span>· <a href="#section-nieuws" class="text-brand-dark hover:underline" x-text="contentResults.nieuws.length + ' artikels'"></a></span>
+                            </template>
+                            <template x-if="contentResults.support.length > 0">
+                                <span>· <a href="#section-support" class="text-brand-dark hover:underline" x-text="contentResults.support.length + ' support'"></a></span>
+                            </template>
+                            <template x-if="contentResults.jobs.length > 0">
+                                <span>· <a href="#section-jobs" class="text-brand-dark hover:underline" x-text="contentResults.jobs.length + (contentResults.jobs.length === 1 ? ' job' : ' jobs')"></a></span>
+                            </template>
+                        </div>
+                    </div>
                     <div class="flex items-center gap-4">
                         <!-- Sort -->
                         <select x-model="resultsSortBy" @change="applyFilters()"
@@ -623,7 +638,7 @@
                 <div x-show="contentResults.nieuws.length > 0 || contentResults.support.length > 0 || contentResults.jobs.length > 0" class="mt-8 pt-8 border-t border-[#E2E8F0] space-y-6">
 
                     <!-- NIEUWS & ARTIKELS -->
-                    <div x-show="contentResults.nieuws.length > 0">
+                    <div id="section-nieuws" x-show="contentResults.nieuws.length > 0">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Nieuws & Artikels</span>
                             <a href="/nieuws" class="text-[13px] font-medium text-brand-dark hover:text-brand-darkest">
@@ -645,7 +660,7 @@
                     </div>
 
                     <!-- SUPPORT -->
-                    <div x-show="contentResults.support.length > 0">
+                    <div id="section-support" x-show="contentResults.support.length > 0">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Support</span>
                             <a href="/support" class="text-[13px] font-medium text-brand-dark hover:text-brand-darkest">
@@ -666,7 +681,7 @@
                     </div>
 
                     <!-- JOBS -->
-                    <div x-show="contentResults.jobs.length > 0">
+                    <div id="section-jobs" x-show="contentResults.jobs.length > 0">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Jobs</span>
                             <a href="/jobs" class="text-[13px] font-medium text-brand-dark hover:text-brand-darkest">
