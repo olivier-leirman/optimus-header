@@ -388,7 +388,8 @@
                     </a>
                     <div class="flex-1 overflow-y-auto pr-3 py-3">
                         <div class="px-2 py-2 mb-1">
-                            <span class="text-xs font-medium text-content-tertiary uppercase tracking-wider">Zoek op</span>
+                            <span class="text-xs font-medium text-content-tertiary uppercase tracking-wider"
+                                x-text="currentMenuType === '3-column' ? 'Zoek op' : 'Categorieën'"></span>
                         </div>
                         <template x-for="(cat, catIdx) in categories" :key="catIdx">
                             <button @click="selectCategory(catIdx)"
@@ -416,7 +417,9 @@
 
                 <!-- Column 2: Subcategories -->
                 <div x-show="activeCategoryHasChildren"
-                    class="w-[300px] shrink-0 border-r border-border-weak flex flex-col">
+                    class="shrink-0 flex flex-col"
+                    :class="currentMenuType === '3-column' && megaFilters.length > 0 ? 'w-[300px] border-r border-border-weak' : 'w-[300px]'"
+                >
                     <a href="#" @click.prevent="selectPage('Alle ' + (categories[activeCategory]?.label || ''))"
                         class="flex items-center gap-1 px-6 py-3 border-b border-border-weak text-content-tertiary text-[14px] tracking-[0.18px] hover:text-brand-green hover:underline shrink-0">
                         <span>Alle <span x-text="categories[activeCategory]?.label || ''"></span></span>
@@ -431,12 +434,12 @@
                                 x-text="categories[activeCategory]?.label || ''"></span>
                         </div>
                         <template x-for="(sub, subIdx) in subcategories" :key="subIdx">
-                            <button @click="selectSubcategory(subIdx)"
-                                @mouseenter="hoverMode && selectSubcategory(subIdx)"
+                            <button @click="currentMenuType === '3-column' ? selectSubcategory(subIdx) : selectPage(sub.label)"
+                                @mouseenter="hoverMode && currentMenuType === '3-column' && selectSubcategory(subIdx)"
                                 class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-left min-h-[48px] transition-colors"
-                                :class="activeSubcategory === subIdx ? (hoverMode ? 'bg-surface-sunken text-content-secondary' : 'bg-brand-accent text-brand-darkest') : 'text-content-secondary hover:bg-surface-sunken/50'">
+                                :class="activeSubcategory === subIdx && currentMenuType === '3-column' ? (hoverMode ? 'bg-surface-sunken text-content-secondary' : 'bg-brand-accent text-brand-darkest') : 'text-content-secondary hover:bg-surface-sunken/50'">
                                 <span class="text-[18px] leading-[1.5] tracking-[0.18px]" x-text="sub.label"></span>
-                                <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none">
+                                <svg x-show="currentMenuType === '3-column'" class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none">
                                     <path d="M7.5 5l5 5-5 5" stroke="currentColor" stroke-width="1.5"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
@@ -445,8 +448,8 @@
                     </div>
                 </div>
 
-                <!-- Column 3: Filters -->
-                <div x-show="activeCategoryHasChildren" class="flex-1 flex flex-col">
+                <!-- Column 3: Filters (only for 3-column menus) -->
+                <div x-show="activeCategoryHasChildren && currentMenuType === '3-column' && megaFilters.length > 0" class="flex-1 flex flex-col">
                     <a href="#" @click.prevent="selectPage('Alle ' + activeSubcategoryLabel + ' producten')"
                         class="flex items-center gap-1 px-6 py-3 border-b border-border-weak text-content-tertiary text-[14px] tracking-[0.18px] hover:text-brand-green hover:underline shrink-0">
                         <span>Alle <span x-text="activeSubcategoryLabel"></span> producten</span>
@@ -463,8 +466,6 @@
                             <a href="#" @click.prevent="selectPage(filter.label)"
                                 class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg min-h-[48px] transition-colors cursor-pointer text-content-secondary hover:bg-surface-sunken/50">
                                 <span class="text-[18px] leading-[1.5] tracking-[0.18px]" x-text="filter.label"></span>
-                                <span class="bg-surface-subtle text-content-tertiary text-xs font-medium rounded-full px-3 py-0.5 min-w-[28px] text-center"
-                                    x-text="filter.count"></span>
                             </a>
                         </template>
                     </div>
@@ -831,9 +832,9 @@
 
                 // === Navigation data ===
                 mainNavLeft: [
-                    { label: 'Meetapparatuur' },
-                    { label: 'Optimalisatie' },
-                    { label: 'Productie' },
+                    { label: 'Meetapparatuur', menuType: '3-column' },
+                    { label: 'Optimalisatie', menuType: '2-column' },
+                    { label: 'Productie', menuType: '2-column' },
                 ],
                 mainNavRight: [
                     { label: 'Nieuws' },
@@ -841,25 +842,100 @@
                     { label: 'Onze divisies' },
                     { label: 'Support' },
                 ],
-                categories: [
-                    { label: 'Testeigenschap', hasChildren: true },
-                    { label: 'Industrie', hasChildren: true },
-                    { label: 'Testnorm', hasChildren: true },
-                    { label: 'Onderdelen & accessoires', hasChildren: false },
-                ],
-                megaFilters: [
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Fysieke eigenschappen', count: 29 },
-                    { label: 'Gesteentemechanica', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                    { label: 'Bindmiddelgehalte - Extractie', count: 112 },
-                ],
+
+                // Full navigation structure
+                navData: {
+                    // === MEETAPPARATUUR (3-column: searchMethods → categories → subcategories) ===
+                    0: {
+                        searchMethods: [
+                            {
+                                label: 'Testeigenschap', hasChildren: true,
+                                categories: [
+                                    { label: 'Beton', subcategories: ['Air entertainment meters','Besturingssystemen','Betonmonitoring','Betononderzoek','Buigtesten - Flexural','Compressietesten','Mallen','Mixers','Smartlab','Verdichten','Verwerkbaarheid en consistentie'] },
+                                    { label: 'Asfalt', subcategories: ['Bindmiddelgehalte - Extractie','Laboratoriumanalyse','Mengen','Pavetest','Software','Monstervoorbereiding','Test on site','Verdichten'] },
+                                    { label: 'Bitumen', subcategories: ['Bindmiddelgehalte - Extractie','Laboratoriumanalyse','Mengen','Monstervoorbereiding','Pavetest','Penetratie','Superpave','Verwekingspunt','Viscositeit','Rolling thin film oven'] },
+                                    { label: 'Cement', subcategories: ['Compressietesten','Buigtesten','Curing - Conservation','Expansie / Krimpen','Fijnheid','Flow','Mixers','Monsterafname','Monstervoorbereiding','Hechting - Pull off','Setting time','Verdichten en mallen'] },
+                                    { label: 'Granulaten & Aggregaten', subcategories: ['Breken','Fysieke eigenschappen','Monstersplitsers','Ovens & muffels','Particle shape','Permeabiliteit','Polished stone value (PSV)','Slijtvastheid','Stroefheid - SRT','Gesteentemechanica','Ruwheid','Vochtgehalte','Zeven'] },
+                                    { label: 'Bodems', subcategories: ['Afschuifweerstand','Compressietesten','Consolidatie','Dynamic plate load','Field penetrometers','Laboratoriumanalyse','Monsterafname','Proctor & CBR','Software','Monster extruders','Triaxaalproef'] },
+                                    { label: 'Staal & metaal', subcategories: ['Hardheid','Universele testmachines','Universal education testing machine','Koude buigtest','Charpy impact'] },
+                                    { label: 'Textiel', subcategories: [] },
+                                    { label: 'Drank testen', subcategories: ['Drukmeting','Barstweerstand','Schuimstabiliteit','Carbonatie','Lassterkte','Lekdetectie','Gasanalyse','CO2 bepaling','Openingskracht'] },
+                                    { label: 'Papier & pulp testing', subcategories: ['Gladheid & porositeit','Barstweerstand','Compressie & crush','Buigweerstand','Monstervoorbereiding','Absorptie & cobb','Contacthoekmeting','Kleurmeting','Testen van pulp','Scheurweerstand','COF','Diktemeting','Doorlaatbaarheid','IBT - Internal Bond','Trekkracht','Inkt','Vouwweerstand','Vochtgehalte'] },
+                                    { label: 'Karton', subcategories: ['Barstweerstand','Buigweerstand','Compressie & crush','Monstervoorbereiding','Absorptie & Cobb','Contacthoekmeting','Diktemeting','COF','Vouwweerstand','Abrasie','Inkt','Scheurweerstand','Kleurmeting','Krastesten','Vochtgehalte'] },
+                                    { label: 'Verpakking & Film', subcategories: ['Compressie','Doorlaatbaarheid','Diktemeting','Gasanalyse','Impact','Lassterkte','Lekdetectie','Monstervoorbereiding','Openingskracht','Peel & kleefkracht','Scheurweerstand','Trekkracht','Vouwweerstand','Wrijvingscoefficient (COF)'] },
+                                    { label: 'Chemie', subcategories: [] },
+                                    { label: 'Monstervoorbereiding', subcategories: [] },
+                                    { label: 'Verwering & klimaat', subcategories: ['Verouderingstesten','Oven & Incubatoren','Klimaatkasten'] },
+                                    { label: 'Transport simulatie', subcategories: ['Vibratie','Drop','Schok','Compressie'] },
+                                    { label: 'Zoutnevel en corrosie', subcategories: [] },
+                                    { label: 'Gasanalyse', subcategories: [] },
+                                    { label: 'Glans & coating', subcategories: [] },
+                                    { label: 'Diktemeting', subcategories: [] },
+                                    { label: 'Gewicht', subcategories: [] },
+                                    { label: 'Kracht(opnemers)', subcategories: [] },
+                                    { label: 'Vochtmeting', subcategories: [] },
+                                    { label: 'Petroleum', subcategories: ['Cold properties','Color','Corrosion','Density','Element Analysis & Halides','Flash point','Fuels','Jet Fuel','Lubricants & Grease','Oxidation Stability','Titration','Used oils','Viscosity'] },
+                                    { label: 'Reagent & standards', subcategories: ['Certified Reference Materials','Cetane Number','Cold Properties','Colour','Conductivity','Density','Flash Point','Pharmacopoeias','Jet Fuel','Osmolality','Refractive Index','Sulphur','Total Acid Number (TAN)','Total Base Number (TBN)','Vapour Pressure','Viscosity'] },
+                                    { label: 'Temperature Calibration & logging', subcategories: ['Calibration baths','Dry block furnaces','Infrared calibrators','Temperature mapping','Temperature simulators','Thermometers (high precision)','Thermometry bridges'] },
+                                ]
+                            },
+                            {
+                                label: 'Industrie', hasChildren: true,
+                                categories: [
+                                    { label: 'Verpakking & logistiek', subcategories: [] },
+                                    { label: 'Papier & karton', subcategories: [] },
+                                    { label: 'Bouwmaterialen & infrastructuur', subcategories: [] },
+                                    { label: 'Textiel', subcategories: [] },
+                                    { label: 'Defensie', subcategories: [] },
+                                    { label: 'Luchtvaart / automobiel', subcategories: [] },
+                                    { label: 'Metaal & staalbouw', subcategories: [] },
+                                    { label: 'Farmaceutisch & (bio)medisch', subcategories: [] },
+                                    { label: 'Voeding & drank', subcategories: [] },
+                                    { label: 'Elektronica & componenten', subcategories: [] },
+                                    { label: 'Research & Development', subcategories: [] },
+                                    { label: 'Chemie & laboratoria', subcategories: [] },
+                                ]
+                            },
+                            {
+                                label: 'Testnorm', hasChildren: true,
+                                categories: [
+                                    'AATCC','AFERA','AFNOR','ARCADIA','ASTM','BS','CCT','DIN','EN',
+                                    'FEFCO','FINAT','GB/T','ICH','IP','IS','ISO','ISTA','IWSTM',
+                                    'JIS','LV','M&S','MIL','NBN','NEN-EN','NEXT','NF','NFQ','NFT',
+                                    'PAPTAC','PSTC','PV','P-VW','Qualicoat','SAE','SCAN','TAPPI',
+                                    'TLMI','TSH','UNE','VDA'
+                                ].map(n => ({ label: n, subcategories: [] }))
+                            },
+                            {
+                                label: 'Onderdelen & Accessoires', hasChildren: false,
+                                categories: []
+                            }
+                        ]
+                    },
+                    // === OPTIMALISATIE (2-column: categories → subcategories) ===
+                    1: {
+                        categories: [
+                            { label: 'Betonmonitoring', subcategories: [] },
+                            { label: 'Luchtmessen', subcategories: [] },
+                            { label: 'Oppervlaktebehandeling', subcategories: ['Plasma','Corona','Bevlamming'] },
+                            { label: 'Statische elektriciteit', subcategories: [] },
+                            { label: 'Afblazen pellets', subcategories: [] },
+                            { label: 'Persluchtoepassingen', subcategories: [] },
+                            { label: 'Contactloos reinigen', subcategories: [] },
+                            { label: 'Temperatuur controle', subcategories: ['Bath circulators (cooling)','Bath circulators (heating)','Chillers','Chillers (entry-level)','Chillers (flow-through)','Chillers (with heating)','Heating baths','Immersion coolers','Lab automation','Special thermostatic equipment','Thermostatic control (high pressure)','Thermostatic control (down to -120\u00B0C)','Thermostatic control (down to -60\u00B0C)','Thermostatic control (up to 425\u00B0C)'] },
+                            { label: 'Vacuümpompen & labo apparatuur', subcategories: ['Balances (analytical)','Balances (precision)','Centrifuges','Lab automation','Overhead stirrers','Peristaltic pumps','Rotary evaporators','Shakers & mixers','Stirring hotplates','Vacuum pumps'] },
+                        ]
+                    },
+                    // === PRODUCTIE (2-column: categories → subcategories) ===
+                    2: {
+                        categories: [
+                            { label: 'Distillation & evaporation', subcategories: ['Petroleum products','Chemical'] },
+                            { label: 'Bioprocess', subcategories: ['Autoclave lab bio reactors','Bio Cell culture bags','Bio process spinner flasks','Bio reactor vessels','Fluid aspiration','Lab automation','Pilot bio reactors','Shakers & mixers','Tangential flow filtration'] },
+                            { label: 'Reactor systems', subcategories: ['Glass reactor systems','Benchtop synthesis','Flow chemistry'] },
+                            { label: 'High pressure reactors & autoclaves', subcategories: ['Large scale pressure autoclaves','Multi position benchtop pressure reactors','Single position benchtop pressure reactors','Small high-pressure autoclaves'] },
+                        ]
+                    }
+                },
 
                 // === Mock Products ===
                 mockProducts: [
@@ -948,29 +1024,46 @@
                 get currentNavLabel() {
                     return this.mainNavLeft[this.openMenu]?.label || '';
                 },
+                get currentMenuType() {
+                    return this.mainNavLeft[this.openMenu]?.menuType || '3-column';
+                },
+                get categories() {
+                    const data = this.navData[this.openMenu];
+                    if (!data) return [];
+                    if (this.currentMenuType === '3-column') {
+                        return data.searchMethods || [];
+                    }
+                    // 2-column: categories with hasChildren derived from subcategories
+                    return (data.categories || []).map(c => ({
+                        ...c,
+                        hasChildren: c.subcategories && c.subcategories.length > 0
+                    }));
+                },
                 get subcategories() {
-                    const map = {
-                        0: [
-                            { label: 'Asfalt' }, { label: 'Beton' }, { label: 'Bitumen' },
-                            { label: 'Bodems' }, { label: 'Cement' }, { label: 'Chemie' },
-                            { label: 'Diktemeting' }, { label: 'Drank testen' }, { label: 'Gasanalyse' },
-                            { label: 'Gewicht' }, { label: 'Glans & coating' }, { label: 'Granulaten & Aggregaten' },
-                            { label: 'Karton' }, { label: 'Kracht (opnemers)' }, { label: 'Monster voorbereiding' },
-                            { label: 'Papier & pulp testing' }, { label: 'Petroleum' }, { label: 'Reagent & standards' },
-                            { label: 'Staal & metaal' }, { label: 'Temperature Calibration & logging' },
-                            { label: 'Textiel' }, { label: 'Transport simulatie' }, { label: 'Verpakking & Film' },
-                            { label: 'Verwerking & klimaat' }, { label: 'Vochtmeting' }, { label: 'Zoutnevel en corrosie' },
-                        ],
-                        1: [
-                            { label: 'Bouw & infrastructuur' }, { label: 'Chemische industrie' },
-                            { label: 'Farmaceutisch' }, { label: 'Voeding & drank' }, { label: 'Textiel & kleding' },
-                        ],
-                        2: [
-                            { label: 'EN 12697' }, { label: 'EN 1426' }, { label: 'EN 1427' },
-                            { label: 'EN 13108' }, { label: 'ASTM D5' },
-                        ],
-                    };
-                    return map[this.activeCategory] || [];
+                    const data = this.navData[this.openMenu];
+                    if (!data) return [];
+                    if (this.currentMenuType === '3-column') {
+                        const method = data.searchMethods?.[this.activeCategory];
+                        if (!method) return [];
+                        return (method.categories || []).map(c => ({ label: c.label }));
+                    }
+                    // 2-column: subcategories of the active category
+                    const cat = data.categories?.[this.activeCategory];
+                    if (!cat) return [];
+                    return (cat.subcategories || []).map(s => typeof s === 'string' ? { label: s } : { label: s.label || s });
+                },
+                get megaFilters() {
+                    const data = this.navData[this.openMenu];
+                    if (!data) return [];
+                    if (this.currentMenuType === '3-column') {
+                        const method = data.searchMethods?.[this.activeCategory];
+                        if (!method) return [];
+                        const cat = method.categories?.[this.activeSubcategory];
+                        if (!cat) return [];
+                        return (cat.subcategories || []).map(s => ({ label: typeof s === 'string' ? s : s.label }));
+                    }
+                    // 2-column: no column 3
+                    return [];
                 },
                 get activeSubcategoryLabel() {
                     return this.subcategories[this.activeSubcategory]?.label || '';
